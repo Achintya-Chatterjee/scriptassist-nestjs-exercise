@@ -1,36 +1,44 @@
-import { ExceptionFilter, Catch, ArgumentsHost, HttpException, Logger } from '@nestjs/common';
+import {
+  ExceptionFilter,
+  Catch,
+  ArgumentsHost,
+  HttpException,
+  HttpStatus,
+  Logger,
+} from '@nestjs/common';
 import { Request, Response } from 'express';
+import { HttpResponse } from 'src/types/http-response.interface';
 
-@Catch(HttpException)
+@Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
   private readonly logger = new Logger(HttpExceptionFilter.name);
 
-  catch(exception: HttpException, host: ArgumentsHost) {
+  catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
-    const status = exception.getStatus();
-    const exceptionResponse = exception.getResponse();
 
-    // TODO: Implement comprehensive error handling
-    // This filter should:
-    // 1. Log errors appropriately based on their severity
-    // 2. Format error responses in a consistent way
-    // 3. Include relevant error details without exposing sensitive information
-    // 4. Handle different types of errors with appropriate status codes
+    const status =
+      exception instanceof HttpException ? exception.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR;
+
+    const message =
+      exception instanceof HttpException ? exception.message : 'An unexpected error occurred.';
+
+    const errorResponse: HttpResponse<null> = {
+      success: false,
+      message,
+      error:
+        process.env.NODE_ENV === 'development' && exception instanceof Error
+          ? exception.stack
+          : 'Internal Server Error',
+      data: null,
+    };
 
     this.logger.error(
-      `HTTP Exception: ${exception.message}`,
-      exception.stack,
+      `[${request.method}] ${request.url} - Status: ${status} - Message: ${message}`,
+      exception instanceof Error ? exception.stack : JSON.stringify(exception),
     );
 
-    // Basic implementation (to be enhanced by candidates)
-    response.status(status).json({
-      success: false,
-      statusCode: status,
-      message: exception.message,
-      path: request.url,
-      timestamp: new Date().toISOString(),
-    });
+    response.status(status).json(errorResponse);
   }
-} 
+}
