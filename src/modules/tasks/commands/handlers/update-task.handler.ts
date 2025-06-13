@@ -18,25 +18,28 @@ export class UpdateTaskHandler implements ICommandHandler<UpdateTaskCommand> {
 
   async execute(command: UpdateTaskCommand): Promise<Task> {
     const { id, updateTaskDto } = command;
-    const task = await this.tasksRepository.findOne({ where: { id } });
 
-    if (!task) {
-      throw new NotFoundException(`Task with ID ${id} not found`);
-    }
+    return this.tasksRepository.manager.transaction(async transactionalEntityManager => {
+      const task = await transactionalEntityManager.findOne(Task, { where: { id } });
 
-    const originalStatus = task.status;
+      if (!task) {
+        throw new NotFoundException(`Task with ID ${id} not found`);
+      }
 
-    Object.assign(task, updateTaskDto);
+      const originalStatus = task.status;
 
-    const updatedTask = await this.tasksRepository.save(task);
+      Object.assign(task, updateTaskDto);
 
-    if (originalStatus !== updatedTask.status) {
-      await this.taskQueue.add('task-status-update', {
-        taskId: updatedTask.id,
-        status: updatedTask.status,
-      });
-    }
+      const updatedTask = await transactionalEntityManager.save(task);
 
-    return updatedTask;
+      if (originalStatus !== updatedTask.status) {
+        await this.taskQueue.add('task-status-update', {
+          taskId: updatedTask.id,
+          status: updatedTask.status,
+        });
+      }
+
+      return updatedTask;
+    });
   }
 }
