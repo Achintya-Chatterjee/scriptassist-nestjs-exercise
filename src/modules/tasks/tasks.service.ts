@@ -201,16 +201,23 @@ export class TasksService {
     }
   }
 
+  /**
+   * Finds all tasks with a given status.
+   * @param status - The status to filter by.
+   * @returns A promise that resolves to an array of task entities.
+   */
   async findByStatus(status: TaskStatus): Promise<Task[]> {
-    // Inefficient implementation: doesn't use proper repository patterns
-    const query = 'SELECT * FROM tasks WHERE status = $1';
-    return this.tasksRepository.query(query, [status]);
+    return this.tasksRepository.find({ where: { status } });
   }
 
-  async updateStatus(id: string, status: string): Promise<Task> {
-    // This method will be called by the task processor
-    const task = await this.findOne(id);
-    task.status = status as any;
-    return this.tasksRepository.save(task);
+  /**
+   * Updates the status of a single task. Called by the task processor.
+   * @param id - The UUID of the task to update.
+   * @param status - The new status for the task.
+   * @returns The updated task entity.
+   */
+  async updateStatus(id: string, status: TaskStatus): Promise<Task> {
+    await this.tasksRepository.update(id, { status });
+    return this.findOne(id);
   }
 }
