@@ -13,6 +13,7 @@ import { GetAllTasksHandler } from './queries/handlers/get-all-tasks.handler';
 import { GetTaskByIdHandler } from './queries/handlers/get-task-by-id.handler';
 import { GetTaskStatsHandler } from './queries/handlers/get-task-stats.handler';
 import { TaskOwnershipGuard } from './guards/task-ownership.guard';
+import { GetOverdueTasksHandler } from './queries/handlers/get-overdue-tasks.handler';
 
 export const CommandHandlers = [
   CreateTaskHandler,
@@ -20,7 +21,12 @@ export const CommandHandlers = [
   DeleteTaskHandler,
   BatchProcessTasksHandler,
 ];
-export const QueryHandlers = [GetAllTasksHandler, GetTaskByIdHandler, GetTaskStatsHandler];
+export const QueryHandlers = [
+  GetAllTasksHandler,
+  GetTaskByIdHandler,
+  GetTaskStatsHandler,
+  GetOverdueTasksHandler,
+];
 
 @Module({
   imports: [
@@ -32,6 +38,6 @@ export const QueryHandlers = [GetAllTasksHandler, GetTaskByIdHandler, GetTaskSta
   ],
   controllers: [TasksController],
   providers: [TasksService, TaskOwnershipGuard, ...CommandHandlers, ...QueryHandlers],
-  exports: [TasksService],
+  exports: [TasksService, CqrsModule],
 })
 export class TasksModule {}
