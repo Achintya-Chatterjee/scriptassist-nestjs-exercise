@@ -53,7 +53,16 @@ async function runMigrations() {
         )
       `);
 
-      console.log('Tables created successfully.');
+      console.log('Creating indexes for tasks table...');
+      await dataSource.query(
+        `CREATE INDEX IF NOT EXISTS "IDX_tasks_user_id" ON "tasks" ("user_id")`,
+      );
+      await dataSource.query(`CREATE INDEX IF NOT EXISTS "IDX_tasks_status" ON "tasks" ("status")`);
+      await dataSource.query(
+        `CREATE INDEX IF NOT EXISTS "IDX_tasks_priority" ON "tasks" ("priority")`,
+      );
+
+      console.log('Tables and indexes created successfully.');
     }
   } catch (error) {
     console.error('Error running migrations:', error);
