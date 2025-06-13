@@ -8,16 +8,11 @@ import {
   Delete,
   UseGuards,
   Query,
-  HttpException,
-  HttpStatus,
-  UseInterceptors,
 } from '@nestjs/common';
 import { TasksService } from './tasks.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { Task } from './entities/task.entity';
 import { TaskStatus } from './enums/task-status.enum';
 import { TaskPriority } from './enums/task-priority.enum';
@@ -25,9 +20,9 @@ import { RateLimitGuard } from '../../common/guards/rate-limit.guard';
 import { RateLimit } from '../../common/decorators/rate-limit.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { TaskFilterDto } from './dto/task-filter.dto';
-import { HttpResponse } from 'src/types/http-response.interface';
 import { TaskResponseDto } from './dto/task-response.dto';
 import { PaginatedResponse } from 'src/types/pagination.interface';
+import { TaskOwnershipGuard } from './guards/task-ownership.guard';
 
 @ApiTags('tasks')
 @Controller('tasks')
@@ -38,7 +33,7 @@ export class TasksController {
   constructor(private readonly tasksService: TasksService) {}
 
   /**
-   * Creates a new task.
+   * Creates a new task for the current user.
    * @param createTaskDto - The data to create the task.
    * @returns The newly created task.
    */
@@ -49,7 +44,7 @@ export class TasksController {
   }
 
   /**
-   * Finds all tasks with optional filtering and pagination.
+   * Finds all tasks, filtered by ownership for non-admins.
    * @param filterDto - The filtering and pagination options.
    * @returns A list of tasks and pagination metadata.
    */
@@ -74,33 +69,36 @@ export class TasksController {
   }
 
   /**
-   * Finds a single task by its ID.
+   * Finds a single task by its ID, protected by ownership.
    * @param id - The ID of the task to find.
    * @returns The found task.
    */
   @Get(':id')
+  @UseGuards(TaskOwnershipGuard)
   @ApiOperation({ summary: 'Find a task by ID' })
   async findOne(@Param('id') id: string): Promise<Task> {
     return this.tasksService.findOne(id);
   }
 
   /**
-   * Updates a task.
+   * Updates a task, protected by ownership.
    * @param id - The ID of the task to update.
    * @param updateTaskDto - The data to update the task with.
    * @returns The updated task.
    */
   @Patch(':id')
+  @UseGuards(TaskOwnershipGuard)
   @ApiOperation({ summary: 'Update a task' })
   async update(@Param('id') id: string, @Body() updateTaskDto: UpdateTaskDto): Promise<Task> {
     return this.tasksService.update(id, updateTaskDto);
   }
 
   /**
-   * Deletes a task.
+   * Deletes a task, protected by ownership.
    * @param id - The ID of the task to delete.
    */
   @Delete(':id')
+  @UseGuards(TaskOwnershipGuard)
   @ApiOperation({ summary: 'Delete a task' })
   async remove(@Param('id') id: string): Promise<void> {
     return this.tasksService.remove(id);

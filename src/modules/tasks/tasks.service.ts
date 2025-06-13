@@ -1,80 +1,43 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In } from 'typeorm';
-import { Task } from './entities/task.entity';
+import { Injectable } from '@nestjs/common';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
-import { InjectQueue } from '@nestjs/bullmq';
-import { Queue } from 'bullmq';
-import { TaskStatus } from './enums/task-status.enum';
+import { Task } from './entities/task.entity';
 import { TaskFilterDto } from './dto/task-filter.dto';
-import { TaskPriority } from './enums/task-priority.enum';
 import { PaginatedResponse } from 'src/types/pagination.interface';
 import { TaskResponseDto } from './dto/task-response.dto';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
+import { CreateTaskCommand } from './commands/create-task.command';
+import { UpdateTaskCommand } from './commands/update-task.command';
+import { DeleteTaskCommand } from './commands/delete-task.command';
+import { BatchProcessTasksCommand } from './commands/batch-process-tasks.command';
+import { GetAllTasksQuery } from './queries/get-all-tasks.query';
+import { GetTaskByIdQuery } from './queries/get-task-by-id.query';
+import { GetTaskStatsQuery } from './queries/get-task-stats.query';
 
 @Injectable()
 export class TasksService {
   constructor(
-    @InjectRepository(Task)
-    private tasksRepository: Repository<Task>,
-    @InjectQueue('task-processing')
-    private taskQueue: Queue,
+    private readonly commandBus: CommandBus,
+    private readonly queryBus: QueryBus,
   ) {}
 
   /**
-   * Creates a new task and adds a status update job to the queue.
+   * Creates a new task for a specific user.
    * This operation is wrapped in a transaction to ensure atomicity.
    * @param createTaskDto - The data for creating the new task.
    * @returns The created task entity.
    */
-  async create(createTaskDto: CreateTaskDto): Promise<Task> {
-    return this.tasksRepository.manager.transaction(async transactionalEntityManager => {
-      const task = transactionalEntityManager.create(Task, createTaskDto);
-      const savedTask = await transactionalEntityManager.save(task);
-
-      await this.taskQueue.add('task-status-update', {
-        taskId: savedTask.id,
-        status: savedTask.status,
-      });
-
-      return savedTask;
-    });
+  create(createTaskDto: CreateTaskDto): Promise<Task> {
+    return this.commandBus.execute(new CreateTaskCommand(createTaskDto));
   }
 
   /**
-   * Retrieves a paginated and filtered list of tasks.
+   * Retrieves a paginated and filtered list of tasks, respecting user ownership.
    * @param filterDto - DTO containing filter and pagination parameters.
    * @returns A paginated list of tasks.
    */
-  async findAll(filterDto: TaskFilterDto): Promise<PaginatedResponse<TaskResponseDto>> {
-    const { status, priority, page = 1, limit = 10 } = filterDto;
-    const query = this.tasksRepository.createQueryBuilder('task');
-
-    if (status) {
-      query.andWhere('task.status = :status', { status });
-    }
-
-    if (priority) {
-      query.andWhere('task.priority = :priority', { priority });
-    }
-
-    const [tasks, total] = await query
-      .leftJoinAndSelect('task.user', 'user')
-      .skip((page - 1) * limit)
-      .take(limit)
-      .getManyAndCount();
-
-    const taskResponseDtos = tasks.map(task => new TaskResponseDto(task));
-
-    return {
-      data: taskResponseDtos,
-      meta: {
-        total,
-        page,
-        limit,
-        totalPages: Math.ceil(total / limit),
-      },
-    };
+  findAll(filterDto: TaskFilterDto): Promise<PaginatedResponse<TaskResponseDto>> {
+    return this.queryBus.execute(new GetAllTasksQuery(filterDto));
   }
 
   /**
@@ -83,16 +46,8 @@ export class TasksService {
    * @param id - The UUID of the task.
    * @returns The found task entity.
    */
-  async findOne(id: string): Promise<Task> {
-    const task = await this.tasksRepository.findOne({
-      where: { id },
-      relations: ['user'],
-    });
-
-    if (!task) {
-      throw new NotFoundException(`Task with ID ${id} not found`);
-    }
-    return task;
+  findOne(id: string): Promise<Task> {
+    return this.queryBus.execute(new GetTaskByIdQuery(id));
   }
 
   /**
@@ -102,23 +57,8 @@ export class TasksService {
    * @param updateTaskDto - The new data for the task.
    * @returns The updated task entity.
    */
-  async update(id: string, updateTaskDto: UpdateTaskDto): Promise<Task> {
-    const task = await this.findOne(id);
-
-    const originalStatus = task.status;
-
-    Object.assign(task, updateTaskDto);
-
-    const updatedTask = await this.tasksRepository.save(task);
-
-    if (originalStatus !== updatedTask.status) {
-      await this.taskQueue.add('task-status-update', {
-        taskId: updatedTask.id,
-        status: updatedTask.status,
-      });
-    }
-
-    return updatedTask;
+  update(id: string, updateTaskDto: UpdateTaskDto): Promise<Task> {
+    return this.commandBus.execute(new UpdateTaskCommand(id, updateTaskDto));
   }
 
   /**
@@ -126,98 +66,27 @@ export class TasksService {
    * Throws a NotFoundException if the task doesn't exist.
    * @param id - The UUID of the task to delete.
    */
-  async remove(id: string): Promise<void> {
-    const result = await this.tasksRepository.delete(id);
-    if (result.affected === 0) {
-      throw new NotFoundException(`Task with ID ${id} not found`);
-    }
+  remove(id: string): Promise<void> {
+    return this.commandBus.execute(new DeleteTaskCommand(id));
   }
 
   /**
    * Retrieves statistics about tasks.
    * @returns An object with task counts by status and priority.
    */
-  async getStats(): Promise<{ byStatus: any; byPriority: any; total: number }> {
-    const stats = await this.tasksRepository
-      .createQueryBuilder('task')
-      .select('task.status', 'status')
-      .addSelect('task.priority', 'priority')
-      .addSelect('COUNT(task.id)', 'count')
-      .groupBy('task.status, task.priority')
-      .getRawMany();
-
-    return stats.reduce(
-      (acc, { status, priority, count }) => {
-        if (status) {
-          acc.byStatus[status] = (acc.byStatus[status] || 0) + parseInt(count, 10);
-        }
-        if (priority) {
-          acc.byPriority[priority] = (acc.byPriority[priority] || 0) + parseInt(count, 10);
-        }
-        acc.total += parseInt(count, 10);
-        return acc;
-      },
-      { byStatus: {}, byPriority: {}, total: 0 },
-    );
+  getStats(): Promise<{ byStatus: any; byPriority: any; total: number }> {
+    return this.queryBus.execute(new GetTaskStatsQuery());
   }
 
   /**
-   * Performs batch operations (e.g., complete, delete) on a set of tasks.
+   * Performs batch operations on a set of tasks, ensuring user ownership.
    * @param operations - An object containing the task IDs and the action to perform.
    * @returns A summary of the successful and failed operations.
    */
-  async batchProcess(operations: {
+  batchProcess(operations: {
     tasks: string[];
     action: string;
   }): Promise<{ success: string[]; failed: string[] }> {
-    const { tasks: taskIds, action } = operations;
-
-    if (!taskIds || taskIds.length === 0) {
-      throw new BadRequestException('Task IDs must be provided.');
-    }
-
-    switch (action) {
-      case 'complete': {
-        const updateResult = await this.tasksRepository.update(
-          { id: In(taskIds) },
-          { status: TaskStatus.COMPLETED },
-        );
-        const affectedCount = updateResult.affected ?? 0;
-        return {
-          success: affectedCount > 0 ? taskIds : [],
-          failed: affectedCount === 0 ? taskIds : [],
-        };
-      }
-      case 'delete': {
-        const deleteResult = await this.tasksRepository.delete({ id: In(taskIds) });
-        const affectedCount = deleteResult.affected ?? 0;
-        return {
-          success: affectedCount > 0 ? taskIds : [],
-          failed: affectedCount === 0 ? taskIds : [],
-        };
-      }
-      default:
-        throw new BadRequestException(`Unknown action: ${action}`);
-    }
-  }
-
-  /**
-   * Finds all tasks with a given status.
-   * @param status - The status to filter by.
-   * @returns A promise that resolves to an array of task entities.
-   */
-  async findByStatus(status: TaskStatus): Promise<Task[]> {
-    return this.tasksRepository.find({ where: { status } });
-  }
-
-  /**
-   * Updates the status of a single task. Called by the task processor.
-   * @param id - The UUID of the task to update.
-   * @param status - The new status for the task.
-   * @returns The updated task entity.
-   */
-  async updateStatus(id: string, status: TaskStatus): Promise<Task> {
-    await this.tasksRepository.update(id, { status });
-    return this.findOne(id);
+    return this.commandBus.execute(new BatchProcessTasksCommand(operations));
   }
 }

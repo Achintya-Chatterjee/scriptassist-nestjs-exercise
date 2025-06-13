@@ -4,6 +4,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { BullModule } from '@nestjs/bullmq';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { ScheduleModule } from '@nestjs/schedule';
+import { ThrottlerStorageRedisService } from '@nest-lab/throttler-storage-redis';
+import { ClsModule } from 'nestjs-cls';
 import { UsersModule } from './modules/users/users.module';
 import { TasksModule } from './modules/tasks/tasks.module';
 import { AuthModule } from './modules/auth/auth.module';
@@ -16,6 +18,12 @@ import { CacheService } from './common/services/cache.service';
     // Configuration
     ConfigModule.forRoot({
       isGlobal: true,
+    }),
+
+    // Context
+    ClsModule.forRoot({
+      global: true,
+      middleware: { mount: true },
     }),
 
     // Database
@@ -54,12 +62,18 @@ import { CacheService } from './common/services/cache.service';
     ThrottlerModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => [
-        {
-          ttl: 60,
-          limit: 10,
-        },
-      ],
+      useFactory: (configService: ConfigService) => ({
+        throttlers: [
+          {
+            ttl: 60,
+            limit: 10,
+          },
+        ],
+        storage: new ThrottlerStorageRedisService({
+          host: configService.get('REDIS_HOST'),
+          port: configService.get('REDIS_PORT'),
+        }),
+      }),
     }),
 
     // Feature modules

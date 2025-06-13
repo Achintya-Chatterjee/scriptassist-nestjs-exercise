@@ -77,6 +77,15 @@ export class UsersService {
   }
 
   /**
+   * Updates the refresh token for a user.
+   * @param id - The UUID of the user.
+   * @param refreshToken - The new refresh token (or null).
+   */
+  async updateRefreshToken(id: string, refreshToken: string | null): Promise<void> {
+    await this.usersRepository.update(id, { refreshToken });
+  }
+
+  /**
    * Deletes a user by their ID.
    * @param id - The UUID of the user to delete.
    * @throws NotFoundException if the user is not found.
