@@ -7,6 +7,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { QueryFailedError } from 'typeorm';
 import { HttpResponse } from 'src/types/http-response.interface';
 
 @Catch()
@@ -18,19 +19,24 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
-    const status =
-      exception instanceof HttpException ? exception.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR;
+    let status = HttpStatus.INTERNAL_SERVER_ERROR;
+    let message = 'An unexpected error occurred.';
 
-    const message =
-      exception instanceof HttpException ? exception.message : 'An unexpected error occurred.';
+    if (exception instanceof HttpException) {
+      status = exception.getStatus();
+      message = exception.message;
+    } else if (exception instanceof QueryFailedError) {
+      // Check for unique constraint violation
+      if (exception.driverError.code === '23505') {
+        status = HttpStatus.CONFLICT;
+        message = 'A record with the same unique key already exists.';
+      }
+    }
 
     const errorResponse: HttpResponse<null> = {
       success: false,
       message,
-      error:
-        process.env.NODE_ENV === 'development' && exception instanceof Error
-          ? exception.stack
-          : 'Internal Server Error',
+      error: message,
       data: null,
     };
 
