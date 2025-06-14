@@ -47,32 +47,19 @@ export class BatchProcessTasksHandler implements ICommandHandler<BatchProcessTas
       }
     }
 
-    const success: string[] = [];
-    const failed: string[] = [];
-
     await this.tasksRepository.manager.transaction(async transactionalEntityManager => {
       if (action === 'update') {
         for (const update of taskUpdates) {
-          try {
-            const { id, ...updateData } = update;
-            await transactionalEntityManager.update(Task, id, updateData);
-            success.push(id);
-          } catch (error) {
-            failed.push(update.id);
-          }
+          const { id, ...updateData } = update;
+          await transactionalEntityManager.update(Task, id, updateData);
         }
       } else if (action === 'delete') {
-        try {
-          await transactionalEntityManager.delete(Task, taskIds);
-          success.push(...taskIds);
-        } catch (error) {
-          failed.push(...taskIds);
-        }
+        await transactionalEntityManager.delete(Task, taskIds);
       } else {
         throw new BadRequestException(`Unknown action: ${action}`);
       }
     });
 
-    return { success, failed };
+    return { success: taskIds, failed: [] };
   }
 }

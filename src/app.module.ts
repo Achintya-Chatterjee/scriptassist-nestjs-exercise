@@ -113,6 +113,10 @@ import { UserContextInterceptor } from './common/interceptors/user-context.inter
       provide: APP_INTERCEPTOR,
       useClass: LoggingInterceptor,
     },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: UserContextInterceptor,
+    },
   ],
 })
 export class AppModule {}

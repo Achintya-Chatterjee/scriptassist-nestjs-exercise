@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ForbiddenException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import { LoginDto } from './dto/login.dto';
@@ -21,13 +21,13 @@ export class AuthService {
     const user = await this.usersService.findByEmail(email);
 
     if (!user) {
-      throw new UnauthorizedException('Invalid email');
+      throw new UnauthorizedException('Invalid credentials');
     }
 
     const passwordValid = await bcrypt.compare(password, user.password);
 
     if (!passwordValid) {
-      throw new UnauthorizedException('Invalid password');
+      throw new UnauthorizedException('Invalid credentials');
     }
 
     const tokens = await this.getTokens(user);
@@ -59,8 +59,8 @@ export class AuthService {
         expiresIn: this.configService.get<string>('JWT_EXPIRATION'),
       }),
       this.jwtService.signAsync(payload, {
-        secret: this.configService.get<string>('JWT_SECRET'),
-        expiresIn: this.configService.get<string>('JWT_EXPIRATION'),
+        secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
+        expiresIn: this.configService.get<string>('JWT_REFRESH_EXPIRATION'),
       }),
     ]);
 
@@ -93,11 +93,6 @@ export class AuthService {
     };
   }
 
-  private generateToken(userId: string) {
-    const payload = { sub: userId };
-    return this.jwtService.sign(payload);
-  }
-
   async validateUser(userId: string): Promise<User | null> {
     const user = await this.usersService.findOne(userId);
 
@@ -109,6 +104,18 @@ export class AuthService {
   }
 
   async validateUserRoles(userId: string, requiredRoles: string[]): Promise<boolean> {
+    if (!requiredRoles || requiredRoles.length === 0) {
+      return true;
+    }
+    const user = await this.usersService.findOne(userId);
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    const hasRole = requiredRoles.some(role => user.role === role);
+    if (!hasRole) {
+      throw new ForbiddenException('You do not have permission to perform this action');
+    }
     return true;
   }
 
