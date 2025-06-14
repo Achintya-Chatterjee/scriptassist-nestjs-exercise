@@ -14,6 +14,7 @@ import { GetAllTasksQuery } from './queries/get-all-tasks.query';
 import { GetTaskByIdQuery } from './queries/get-task-by-id.query';
 import { GetTaskStatsQuery } from './queries/get-task-stats.query';
 import { TaskStatsDto } from './dto/task-stats.dto';
+import { BatchTaskDto } from './dto/batch-task.dto';
 
 @Injectable()
 export class TasksService {
@@ -84,10 +85,7 @@ export class TasksService {
    * @param operations - An object containing the task IDs and the action to perform.
    * @returns A summary of the successful and failed operations.
    */
-  batchProcess(operations: {
-    tasks: string[];
-    action: string;
-  }): Promise<{ success: string[]; failed: string[] }> {
+  batchProcess(operations: BatchTaskDto): Promise<{ success: string[]; failed: string[] }> {
     return this.commandBus.execute(new BatchProcessTasksCommand(operations));
   }
 }

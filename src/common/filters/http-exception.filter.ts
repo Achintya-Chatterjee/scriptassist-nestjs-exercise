@@ -7,7 +7,6 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { HttpResponse } from 'src/types/http-response.interface';
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
@@ -21,24 +20,34 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const status =
       exception instanceof HttpException ? exception.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR;
 
-    const message =
-      exception instanceof HttpException ? exception.message : 'An unexpected error occurred.';
+    const errorResponse =
+      exception instanceof HttpException ? exception.getResponse() : 'Internal Server Error';
 
-    const errorResponse: HttpResponse<null> = {
-      success: false,
-      message,
-      error:
-        process.env.NODE_ENV === 'development' && exception instanceof Error
-          ? exception.stack
-          : 'Internal Server Error',
-      data: null,
-    };
+    const logMessage =
+      exception instanceof Error ? exception.message : 'An unexpected error occurred.';
 
     this.logger.error(
-      `[${request.method}] ${request.url} - Status: ${status} - Message: ${message}`,
-      exception instanceof Error ? exception.stack : JSON.stringify(exception),
+      `[${request.method}] ${request.url} - Status: ${status} - Message: ${logMessage}`,
+      typeof errorResponse === 'object' && errorResponse !== null
+        ? JSON.stringify(errorResponse, null, 2)
+        : exception instanceof Error
+          ? exception.stack
+          : JSON.stringify(exception),
     );
 
-    response.status(status).json(errorResponse);
+    if (typeof errorResponse === 'object' && errorResponse !== null) {
+      response.status(status).json({
+        ...errorResponse,
+        timestamp: new Date().toISOString(),
+        path: request.url,
+      });
+    } else {
+      response.status(status).json({
+        statusCode: status,
+        timestamp: new Date().toISOString(),
+        path: request.url,
+        message: errorResponse,
+      });
+    }
   }
 }

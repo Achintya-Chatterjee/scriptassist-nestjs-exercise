@@ -7,7 +7,7 @@ import { ClsService } from 'nestjs-cls';
 export class LoggingInterceptor implements NestInterceptor {
   private readonly logger = new Logger(LoggingInterceptor.name);
 
-  constructor(private readonly cls: ClsService) {}
+  constructor(private readonly cls?: ClsService) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     const req = context.switchToHttp().getRequest();
@@ -15,11 +15,13 @@ export class LoggingInterceptor implements NestInterceptor {
     const { method, url, ip } = req;
     const now = Date.now();
 
+    this.logger.log(`[${method}] ${url} - Request received`);
+
     return next.handle().pipe(
       tap({
         next: () => {
           const delay = Date.now() - now;
-          const user = this.cls.get('user');
+          const user = this.cls?.get('user');
           const userId = user ? user.id : 'anonymous';
 
           const logData = {
@@ -31,10 +33,11 @@ export class LoggingInterceptor implements NestInterceptor {
             delay: `${delay}ms`,
           };
           this.logger.log(JSON.stringify(logData));
+          this.logger.log(`[${method}] ${url} - Request completed in ${delay}ms`);
         },
         error: err => {
           const delay = Date.now() - now;
-          const user = this.cls.get('user');
+          const user = this.cls?.get('user');
           const userId = user ? user.id : 'anonymous';
 
           const logData = {
@@ -47,6 +50,7 @@ export class LoggingInterceptor implements NestInterceptor {
             error: err.message,
           };
           this.logger.error(JSON.stringify(logData));
+          this.logger.error(`[${method}] ${url} - Request completed with error in ${delay}ms`);
         },
       }),
     );
