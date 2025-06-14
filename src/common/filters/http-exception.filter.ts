@@ -8,7 +8,6 @@ import {
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { QueryFailedError } from 'typeorm';
-import { HttpResponse } from 'src/types/http-response.interface';
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
@@ -19,32 +18,37 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
-    let status = HttpStatus.INTERNAL_SERVER_ERROR;
-    let message = 'An unexpected error occurred.';
+    const status =
+      exception instanceof HttpException ? exception.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR;
 
-    if (exception instanceof HttpException) {
-      status = exception.getStatus();
-      message = exception.message;
-    } else if (exception instanceof QueryFailedError) {
-      // Check for unique constraint violation
-      if (exception.driverError.code === '23505') {
-        status = HttpStatus.CONFLICT;
-        message = 'A record with the same unique key already exists.';
-      }
-    }
+    const errorResponse =
+      exception instanceof HttpException ? exception.getResponse() : 'Internal Server Error';
 
-    const errorResponse: HttpResponse<null> = {
-      success: false,
-      message,
-      error: message,
-      data: null,
-    };
+    const logMessage =
+      exception instanceof Error ? exception.message : 'An unexpected error occurred.';
 
     this.logger.error(
-      `[${request.method}] ${request.url} - Status: ${status} - Message: ${message}`,
-      exception instanceof Error ? exception.stack : JSON.stringify(exception),
+      `[${request.method}] ${request.url} - Status: ${status} - Message: ${logMessage}`,
+      typeof errorResponse === 'object' && errorResponse !== null
+        ? JSON.stringify(errorResponse, null, 2)
+        : exception instanceof Error
+          ? exception.stack
+          : JSON.stringify(exception),
     );
 
-    response.status(status).json(errorResponse);
+    if (typeof errorResponse === 'object' && errorResponse !== null) {
+      response.status(status).json({
+        ...errorResponse,
+        timestamp: new Date().toISOString(),
+        path: request.url,
+      });
+    } else {
+      response.status(status).json({
+        statusCode: status,
+        timestamp: new Date().toISOString(),
+        path: request.url,
+        message: errorResponse,
+      });
+    }
   }
 }

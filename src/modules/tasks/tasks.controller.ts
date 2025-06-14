@@ -21,6 +21,7 @@ import { TaskFilterDto } from './dto/task-filter.dto';
 import { TaskResponseDto } from './dto/task-response.dto';
 import { PaginatedResponse } from 'src/types/pagination.interface';
 import { TaskOwnershipGuard } from './guards/task-ownership.guard';
+import { BatchTaskDto } from './dto/batch-task.dto';
 
 @ApiTags('tasks')
 @Controller('tasks')
@@ -108,7 +109,7 @@ export class TasksController {
    */
   @Post('batch')
   @ApiOperation({ summary: 'Batch process multiple tasks' })
-  async batchProcess(@Body() operations: { tasks: string[]; action: string }) {
+  async batchProcess(@Body() operations: BatchTaskDto) {
     return this.tasksService.batchProcess(operations);
   }
 }
