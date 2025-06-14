@@ -98,7 +98,7 @@ export class AuthService {
     return this.jwtService.sign(payload);
   }
 
-  async validateUser(userId: string): Promise<any> {
+  async validateUser(userId: string): Promise<User | null> {
     const user = await this.usersService.findOne(userId);
 
     if (!user) {

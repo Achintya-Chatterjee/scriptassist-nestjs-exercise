@@ -5,6 +5,12 @@ import { ConfigService } from '@nestjs/config';
 import { Request } from 'express';
 import { UsersService } from '../../users/users.service';
 import * as bcrypt from 'bcrypt';
+import { User } from 'src/modules/users/entities/user.entity';
+
+type JwtPayload = {
+  sub: string;
+  email: string;
+};
 
 @Injectable()
 export class JwtRefreshStrategy extends PassportStrategy(Strategy, 'jwt-refresh') {
@@ -19,7 +25,7 @@ export class JwtRefreshStrategy extends PassportStrategy(Strategy, 'jwt-refresh'
     });
   }
 
-  async validate(req: Request, payload: any) {
+  async validate(req: Request, payload: JwtPayload): Promise<User> {
     const authHeader = req.get('authorization');
     if (!authHeader) {
       throw new UnauthorizedException('Access Denied');
