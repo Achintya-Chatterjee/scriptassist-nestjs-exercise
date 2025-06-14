@@ -6,7 +6,6 @@ import { Task } from '../../src/modules/tasks/entities/task.entity';
 import { NotFoundException } from '@nestjs/common';
 import { mockTask } from '../mocks/data';
 
-// Mock the repository
 const mockTasksRepository = {
   delete: mock(async (id: string) => ({ affected: 1, raw: {} })),
 };

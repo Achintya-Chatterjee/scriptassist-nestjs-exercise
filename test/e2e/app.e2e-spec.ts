@@ -14,7 +14,6 @@ describe('AppController (e2e)', () => {
 
     app = moduleFixture.createNestApplication();
 
-    // Apply the same pipes used in the main application
     app.useGlobalPipes(
       new ValidationPipe({
         whitelist: true,
@@ -37,6 +36,4 @@ describe('AppController (e2e)', () => {
     const response = await request(app.getHttpServer()).get('/');
     expect(response.status).toBe(401);
   });
-
-  // Add more tests as needed
 });

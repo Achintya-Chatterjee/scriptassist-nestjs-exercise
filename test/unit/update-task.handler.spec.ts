@@ -8,12 +8,9 @@ import { Queue } from 'bullmq';
 import { NotFoundException } from '@nestjs/common';
 import { TaskStatus } from '../../src/modules/tasks/enums/task-status.enum';
 
-// Mocks
 const mockTasksRepository = {
   manager: {
-    transaction: mock(async (cb: any) => {
-      // This will be customized inside each test
-    }),
+    transaction: mock(async (cb: any) => {}),
   },
 };
 
@@ -34,7 +31,6 @@ describe('UpdateTaskHandler', () => {
     const updateDto = { title: 'Updated Title' };
     const command = new UpdateTaskCommand(mockTask.id, updateDto);
 
-    // Mock the transaction for this specific test
     mockTasksRepository.manager.transaction.mockImplementation(async cb => {
       const transactionalEntityManager = {
         findOne: async () => ({ ...mockTask }),
@@ -46,8 +42,8 @@ describe('UpdateTaskHandler', () => {
     const result = await handler.execute(command);
 
     expect(result.title).toBe(updateDto.title);
-    expect(result.description).toBe(mockTask.description); // Description should not change
-    expect(mockTaskQueue.add).not.toHaveBeenCalled(); // Status didn't change
+    expect(result.description).toBe(mockTask.description);
+    expect(mockTaskQueue.add).not.toHaveBeenCalled();
   });
 
   it('should add a job to the queue if the status changes', async () => {
@@ -78,7 +74,7 @@ describe('UpdateTaskHandler', () => {
 
     mockTasksRepository.manager.transaction.mockImplementation(async cb => {
       const transactionalEntityManager = {
-        findOne: async () => null, // Simulate task not found
+        findOne: async () => null,
         save: async (task: Task) => task,
       };
       return cb(transactionalEntityManager);

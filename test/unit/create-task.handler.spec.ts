@@ -7,11 +7,9 @@ import { mockUser } from '../mocks/data';
 import { Queue } from 'bullmq';
 import { ClsService } from 'nestjs-cls';
 
-// Mocks
 const mockTasksRepository = {
   manager: {
     transaction: mock(async (cb: any) => {
-      // Mock the transactional entity manager
       const transactionalEntityManager = {
         create: (entity: any, dto: any) => ({ ...dto, id: 'new-task-uuid' }),
         save: async (task: any) => task,
@@ -33,7 +31,6 @@ describe('CreateTaskHandler', () => {
   let handler: CreateTaskHandler;
 
   beforeEach(() => {
-    // Reset mocks before each test
     mockTasksRepository.manager.transaction.mockClear();
     mockTaskQueue.add.mockClear();
     mockClsService.get.mockClear();
@@ -54,19 +51,15 @@ describe('CreateTaskHandler', () => {
     const command = new CreateTaskCommand(createTaskDto);
     const result = await handler.execute(command);
 
-    // Verify the user was retrieved from CLS
     expect(mockClsService.get).toHaveBeenCalledWith('user');
 
-    // Verify the transaction was initiated
     expect(mockTasksRepository.manager.transaction).toHaveBeenCalledTimes(1);
 
-    // Verify a job was added to the queue
     expect(mockTaskQueue.add).toHaveBeenCalledWith('task-status-update', {
       taskId: 'new-task-uuid',
-      status: undefined, // Status is not defined in the DTO, so it will be the default
+      status: undefined,
     });
 
-    // Verify the result
     expect(result.id).toBe('new-task-uuid');
     expect(result.title).toBe(createTaskDto.title);
     expect(result.userId).toBe(mockUser.id);

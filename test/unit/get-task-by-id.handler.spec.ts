@@ -6,7 +6,6 @@ import { Repository } from 'typeorm';
 import { Task } from '../../src/modules/tasks/entities/task.entity';
 import { mockTask } from '../mocks/data';
 
-// Mock the repository
 const mockTasksRepository = {
   findOne: mock(async (options: any): Promise<Task | null> => null),
 };
@@ -15,10 +14,8 @@ describe('GetTaskByIdHandler', () => {
   let handler: GetTaskByIdHandler;
 
   beforeEach(() => {
-    // Reset mocks
     mockTasksRepository.findOne.mockClear();
 
-    // Create a new handler instance for each test
     handler = new GetTaskByIdHandler(mockTasksRepository as unknown as Repository<Task>);
   });
 
@@ -41,7 +38,6 @@ describe('GetTaskByIdHandler', () => {
 
     const query = new GetTaskByIdQuery(taskId);
 
-    // We expect the promise to reject with a specific error
     const promise = handler.execute(query);
     expect(promise).rejects.toThrow(NotFoundException);
     expect(promise).rejects.toThrow(`Task with ID ${taskId} not found`);

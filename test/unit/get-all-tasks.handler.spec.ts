@@ -8,7 +8,6 @@ import { ClsService } from 'nestjs-cls';
 import { User } from '../../src/modules/users/entities/user.entity';
 import { TaskStatus } from '../../src/modules/tasks/enums/task-status.enum';
 
-// Mock QueryBuilder
 const mockQueryBuilder = {
   andWhere: mock().mockReturnThis(),
   leftJoinAndSelect: mock().mockReturnThis(),
@@ -17,7 +16,6 @@ const mockQueryBuilder = {
   getManyAndCount: mock().mockResolvedValue([[], 0]),
 };
 
-// Mocks for services and repositories
 const mockTasksRepository = {
   createQueryBuilder: mock().mockReturnValue(mockQueryBuilder),
 };
@@ -30,7 +28,6 @@ describe('GetAllTasksHandler', () => {
   let handler: GetAllTasksHandler;
 
   beforeEach(() => {
-    // Clear all mocks before each test
     mockTasksRepository.createQueryBuilder.mockClear();
     mockClsService.get.mockClear();
     mockQueryBuilder.andWhere.mockClear();
@@ -46,30 +43,24 @@ describe('GetAllTasksHandler', () => {
   });
 
   it('should get tasks for a regular user with correct filters', async () => {
-    // Setup: Return one task for the query
     mockQueryBuilder.getManyAndCount.mockResolvedValueOnce([[{ ...mockTask, user: mockUser }], 1]);
     const filterDto = { page: 1, limit: 10, status: TaskStatus.PENDING };
     const query = new GetAllTasksQuery(filterDto);
 
     await handler.execute(query);
 
-    // 1. Verify user is retrieved from CLS
     expect(mockClsService.get).toHaveBeenCalledWith('user');
 
-    // 2. Verify query builder is created
     expect(mockTasksRepository.createQueryBuilder).toHaveBeenCalledWith('task');
 
-    // 3. Verify user filter is applied for regular user
     expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith('task.userId = :userId', {
       userId: mockUser.id,
     });
 
-    // 4. Verify DTO filters are applied
     expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith('task.status = :status', {
       status: TaskStatus.PENDING,
     });
 
-    // 5. Verify pagination is applied
     expect(mockQueryBuilder.skip).toHaveBeenCalledWith(0);
     expect(mockQueryBuilder.take).toHaveBeenCalledWith(10);
   });
@@ -82,7 +73,7 @@ describe('GetAllTasksHandler', () => {
     await handler.execute(query);
 
     expect(mockClsService.get).toHaveBeenCalledWith('user');
-    // For admin, the `task.userId` where clause should not be called
+
     expect(mockQueryBuilder.andWhere).not.toHaveBeenCalledWith(
       'task.userId = :userId',
       expect.anything(),

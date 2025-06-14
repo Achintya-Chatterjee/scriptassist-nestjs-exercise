@@ -3,12 +3,10 @@ import { JwtAuthGuard } from '../../src/modules/auth/guards/jwt-auth.guard';
 import { ClsService } from 'nestjs-cls';
 import { ExecutionContext } from '@nestjs/common';
 
-// Mock ClsService
 const mockClsService = {
   set: mock((key: string, value: any) => {}),
 };
 
-// Create a mock ExecutionContext
 const mockExecutionContext = {} as ExecutionContext;
 
 describe('JwtAuthGuard', () => {
@@ -32,7 +30,6 @@ describe('JwtAuthGuard', () => {
   });
 
   it('should throw an error and not set user in CLS if user is not found', () => {
-    // The base handleRequest should throw an UnauthorizedException when user is null.
     expect(() => guard.handleRequest(null, null, null, mockExecutionContext)).toThrow(
       'Unauthorized',
     );
