@@ -5,6 +5,7 @@ import {
   HttpException,
   HttpStatus,
   Logger,
+  ConflictException,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { QueryFailedError } from 'typeorm';
@@ -18,37 +19,40 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
-    const status =
-      exception instanceof HttpException ? exception.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR;
+    let status = HttpStatus.INTERNAL_SERVER_ERROR;
+    let message: string | object = 'Internal Server Error';
 
-    const errorResponse =
-      exception instanceof HttpException ? exception.getResponse() : 'Internal Server Error';
-
-    const logMessage =
-      exception instanceof Error ? exception.message : 'An unexpected error occurred.';
+    if (exception instanceof HttpException) {
+      status = exception.getStatus();
+      message = exception.getResponse();
+    } else if (exception instanceof QueryFailedError) {
+      // Handle unique constraint violation
+      if ((exception as any).code === '23505') {
+        status = HttpStatus.CONFLICT;
+        message = {
+          statusCode: status,
+          message: 'A record with the same key already exists.',
+          error: 'Conflict',
+        };
+      }
+    }
 
     this.logger.error(
-      `[${request.method}] ${request.url} - Status: ${status} - Message: ${logMessage}`,
-      typeof errorResponse === 'object' && errorResponse !== null
-        ? JSON.stringify(errorResponse, null, 2)
-        : exception instanceof Error
-          ? exception.stack
-          : JSON.stringify(exception),
+      `[${request.method}] ${request.url} - Status: ${status} - Message: ${
+        typeof message === 'string' ? message : JSON.stringify(message)
+      }`,
+      exception instanceof Error ? exception.stack : JSON.stringify(exception),
     );
 
-    if (typeof errorResponse === 'object' && errorResponse !== null) {
-      response.status(status).json({
-        ...errorResponse,
-        timestamp: new Date().toISOString(),
-        path: request.url,
-      });
-    } else {
-      response.status(status).json({
-        statusCode: status,
-        timestamp: new Date().toISOString(),
-        path: request.url,
-        message: errorResponse,
-      });
-    }
+    response.status(status).json(
+      typeof message === 'object'
+        ? { ...message, timestamp: new Date().toISOString(), path: request.url }
+        : {
+            statusCode: status,
+            timestamp: new Date().toISOString(),
+            path: request.url,
+            message,
+          },
+    );
   }
 }
