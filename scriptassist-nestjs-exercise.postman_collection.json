@@ -1,0 +1,508 @@
+{
+  "info": {
+    "_postman_id": "a5bc4ff7-9485-41fb-9c59-16f83b0f563e",
+    "name": "scriptassist-nestjs-exercise",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "12131137"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login a user",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyYTY5ZDc5ZS03MWI0LTRkM2UtYmZmNi04MTRiOWVlMWIwNzMiLCJlbWFpbCI6InRlc3QtdXNlckBleGFtcGxlLmNvbSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzQ5ODkxMTg2LCJleHAiOjE3NDk5Nzc1ODZ9.OcqptEnAI3VhUEPhtrKHCoSJJnNPVEuaIL3pjDH0Pbs",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "    {\n      \"email\": \"user@example.com\",\n      \"password\": \"user123\"\n    }"
+            },
+            "url": {
+              "raw": "http://localhost:3000/auth/login",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["auth", "login"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Register a new user",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "    {\n      \"email\": \"test-user@example.com\",\n      \"password\": \"aVeryStrongPassword123!\",\n      \"name\":\"tests username\"\n    }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3000/auth/register",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["auth", "register"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Log out a user",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkMmNhNDllMC05NGQ2LTQwNGItOWI5Ny1hOTc1Yjk5MmZjZmUiLCJlbWFpbCI6ImpvaG4uZG9lQGV4YW1wbGUuY29tIiwicm9sZSI6InVzZXIiLCJpYXQiOjE3NDk4OTA0MzQsImV4cCI6MTc0OTk3NjgzNH0.Y1qX3dDa-mOsT0w14YB3OKBwrk_b5y-um-R0WXoaMCY",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"name\": \"John Doe\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3000/auth/logout",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["auth", "logout"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh authentication tokens",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkMmNhNDllMC05NGQ2LTQwNGItOWI5Ny1hOTc1Yjk5MmZjZmUiLCJlbWFpbCI6ImpvaG4uZG9lQGV4YW1wbGUuY29tIiwicm9sZSI6InVzZXIiLCJpYXQiOjE3NDk4OTEwMDEsImV4cCI6MTc0OTk3NzQwMX0.IHG1O3CgF1Z3pC6FfZtHfgnk-k-3RJEWlx6_2ZfOgyA",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"name\": \"John Doe\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3000/auth/refresh",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["auth", "refresh"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Tasks",
+      "item": [
+        {
+          "name": "Find all tasks with filtering options",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1NTBlODQwMC1lMjliLTQxZDQtYTcxNi00NDY2NTU0NDAwMDEiLCJlbWFpbCI6InVzZXJAZXhhbXBsZS5jb20iLCJyb2xlIjoidXNlciIsImlhdCI6MTc0OTg5MjA5MCwiZXhwIjoxNzQ5OTc4NDkwfQ.6iPi9ArxxyYTCm0kMySKocTrocHUllSD4um49NUdBvU",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/tasks?status=PENDING&priority=HIGH&page=1&limit=10",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["tasks"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "PENDING"
+                },
+                {
+                  "key": "priority",
+                  "value": "HIGH"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get task statistics",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1NTBlODQwMC1lMjliLTQxZDQtYTcxNi00NDY2NTU0NDAwMDEiLCJlbWFpbCI6InVzZXJAZXhhbXBsZS5jb20iLCJyb2xlIjoidXNlciIsImlhdCI6MTc0OTg5MjA5MCwiZXhwIjoxNzQ5OTc4NDkwfQ.6iPi9ArxxyYTCm0kMySKocTrocHUllSD4um49NUdBvU",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/tasks/stats",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["tasks", "stats"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Find a task by Id",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1NTBlODQwMC1lMjliLTQxZDQtYTcxNi00NDY2NTU0NDAwMDEiLCJlbWFpbCI6InVzZXJAZXhhbXBsZS5jb20iLCJyb2xlIjoidXNlciIsImlhdCI6MTc0OTg5MjA5MCwiZXhwIjoxNzQ5OTc4NDkwfQ.6iPi9ArxxyYTCm0kMySKocTrocHUllSD4um49NUdBvU",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/tasks/660e8400-e29b-41d4-a716-446655440002",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["tasks", "660e8400-e29b-41d4-a716-446655440002"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update a task",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1NTBlODQwMC1lMjliLTQxZDQtYTcxNi00NDY2NTU0NDAwMDEiLCJlbWFpbCI6InVzZXJAZXhhbXBsZS5jb20iLCJyb2xlIjoidXNlciIsImlhdCI6MTc0OTg5MjA5MCwiZXhwIjoxNzQ5OTc4NDkwfQ.6iPi9ArxxyYTCm0kMySKocTrocHUllSD4um49NUdBvU",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Complete project documentation\",\n  \"description\": \"Add details about API endpoints and data models\",\n  \"status\": \"IN_PROGRESS\",\n  \"priority\": \"MEDIUM\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3000/tasks/660e8400-e29b-41d4-a716-446655440002",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["tasks", "660e8400-e29b-41d4-a716-446655440002"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete a task",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1NTBlODQwMC1lMjliLTQxZDQtYTcxNi00NDY2NTU0NDAwMDEiLCJlbWFpbCI6InVzZXJAZXhhbXBsZS5jb20iLCJyb2xlIjoidXNlciIsImlhdCI6MTc0OTg5MjA5MCwiZXhwIjoxNzQ5OTc4NDkwfQ.6iPi9ArxxyYTCm0kMySKocTrocHUllSD4um49NUdBvU",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/tasks/660e8400-e29b-41d4-a716-446655440002",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["tasks", "660e8400-e29b-41d4-a716-446655440002"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Batch process multiple tasks",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1NTBlODQwMC1lMjliLTQxZDQtYTcxNi00NDY2NTU0NDAwMDEiLCJlbWFpbCI6InVzZXJAZXhhbXBsZS5jb20iLCJyb2xlIjoidXNlciIsImlhdCI6MTc0OTkwMDk3NSwiZXhwIjoxNzQ5OTg3Mzc1fQ.MKkbcGqmZ6S4mg1ftB2Swhmo8PmXBpM2-F8sl3Wfh5Q",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"update\",\n  \"tasks\": [\n    {\n      \"id\": \"660e8400-e29b-41d4-a716-446655440003\",\n      \"status\": \"IN_PROGRESS\",\n      \"priority\": \"HIGH\"\n    },\n    {\n      \"id\": \"e55cc4a8-7365-40a0-9375-8506a53bab93\",\n      \"status\": \"COMPLETED\"\n    },\n    {\n      \"id\": \"d24ddab1-0883-4e91-8680-ee253ca44bcc\",\n      \"dueDate\": \"2025-06-14T06:13:47.165Z\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3000/tasks/batch",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["tasks", "batch"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create a new task",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1NTBlODQwMC1lMjliLTQxZDQtYTcxNi00NDY2NTU0NDAwMDEiLCJlbWFpbCI6InVzZXJAZXhhbXBsZS5jb20iLCJyb2xlIjoidXNlciIsImlhdCI6MTc0OTg5MjA5MCwiZXhwIjoxNzQ5OTc4NDkwfQ.6iPi9ArxxyYTCm0kMySKocTrocHUllSD4um49NUdBvU",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "        {\n          \"title\": \"Write optimise database Queries\",\n          \"description\": \"Verify the database query is working correctly.\",\n          \"priority\": \"MEDIUM\"\n        }"
+            },
+            "url": {
+              "raw": "http://localhost:3000/tasks",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["tasks"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Create a new User",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1NTBlODQwMC1lMjliLTQxZDQtYTcxNi00NDY2NTU0NDAwMDEiLCJlbWFpbCI6InVzZXJAZXhhbXBsZS5jb20iLCJyb2xlIjoidXNlciIsImlhdCI6MTc0OTkwMDk3NSwiZXhwIjoxNzQ5OTg3Mzc1fQ.MKkbcGqmZ6S4mg1ftB2Swhmo8PmXBpM2-F8sl3Wfh5Q",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"name\": \"John Doe\",\n  \"password\": \"Password123!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3000/users",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["users"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get all users",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1NTBlODQwMC1lMjliLTQxZDQtYTcxNi00NDY2NTU0NDAwMDEiLCJlbWFpbCI6InVzZXJAZXhhbXBsZS5jb20iLCJyb2xlIjoidXNlciIsImlhdCI6MTc0OTkwMDk3NSwiZXhwIjoxNzQ5OTg3Mzc1fQ.MKkbcGqmZ6S4mg1ftB2Swhmo8PmXBpM2-F8sl3Wfh5Q",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/users",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["users"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get a user by Id",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1NTBlODQwMC1lMjliLTQxZDQtYTcxNi00NDY2NTU0NDAwMDEiLCJlbWFpbCI6InVzZXJAZXhhbXBsZS5jb20iLCJyb2xlIjoidXNlciIsImlhdCI6MTc0OTkwMDk3NSwiZXhwIjoxNzQ5OTg3Mzc1fQ.MKkbcGqmZ6S4mg1ftB2Swhmo8PmXBpM2-F8sl3Wfh5Q",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/users/550e8400-e29b-41d4-a716-446655440000",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["users", "550e8400-e29b-41d4-a716-446655440000"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update a user",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1NTBlODQwMC1lMjliLTQxZDQtYTcxNi00NDY2NTU0NDAwMDEiLCJlbWFpbCI6InVzZXJAZXhhbXBsZS5jb20iLCJyb2xlIjoidXNlciIsImlhdCI6MTc0OTkwMDk3NSwiZXhwIjoxNzQ5OTg3Mzc1fQ.MKkbcGqmZ6S4mg1ftB2Swhmo8PmXBpM2-F8sl3Wfh5Q",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"achintya@gmail.com\",\n  \"name\": \"Achintya Chatterjee\",\n  \"password\": \"Bumba@1997!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3000/users/d2ca49e0-94d6-404b-9b97-a975b992fcfe",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["users", "d2ca49e0-94d6-404b-9b97-a975b992fcfe"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete a user",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1NTBlODQwMC1lMjliLTQxZDQtYTcxNi00NDY2NTU0NDAwMDEiLCJlbWFpbCI6InVzZXJAZXhhbXBsZS5jb20iLCJyb2xlIjoidXNlciIsImlhdCI6MTc0OTkwMDk3NSwiZXhwIjoxNzQ5OTg3Mzc1fQ.MKkbcGqmZ6S4mg1ftB2Swhmo8PmXBpM2-F8sl3Wfh5Q",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"achintya@gmail.com\",\n  \"name\": \"Achintya Chatterjee\",\n  \"password\": \"Bumba@1997!\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3000/users/d2ca49e0-94d6-404b-9b97-a975b992fcfe",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["users", "d2ca49e0-94d6-404b-9b97-a975b992fcfe"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
