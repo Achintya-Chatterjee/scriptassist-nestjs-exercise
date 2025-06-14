@@ -6,8 +6,8 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Task } from '../../tasks/entities/task.entity';
 import { Exclude } from 'class-transformer';
+import { Task } from '../../tasks/entities/task.entity';
 
 @Entity('users')
 export class User {
@@ -31,7 +31,7 @@ export class User {
   @Exclude({ toPlainOnly: true })
   refreshToken: string | null;
 
-  @OneToMany(() => Task, task => task.user)
+  @OneToMany('Task', 'user')
   tasks: Task[];
 
   @CreateDateColumn({ name: 'created_at' })

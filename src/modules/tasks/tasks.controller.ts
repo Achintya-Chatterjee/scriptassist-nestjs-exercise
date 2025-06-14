@@ -99,7 +99,7 @@ export class TasksController {
   @UseGuards(TaskOwnershipGuard)
   @ApiOperation({ summary: 'Delete a task' })
   async remove(@Param('id') id: string): Promise<void> {
-    return this.tasksService.remove(id);
+    await this.tasksService.remove(id);
   }
 
   /**
