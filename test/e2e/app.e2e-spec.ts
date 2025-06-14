@@ -1,9 +1,8 @@
+import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
-import { AppModule } from '../src/app.module';
-
-jest.setTimeout(600000);
+import { AppModule } from '../../src/app.module';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication;
@@ -34,8 +33,9 @@ describe('AppController (e2e)', () => {
     await app.close();
   });
 
-  it('/ (GET) - should be protected', () => {
-    return request(app.getHttpServer()).get('/').expect(401);
+  it('/ (GET) - should be protected', async () => {
+    const response = await request(app.getHttpServer()).get('/');
+    expect(response.status).toBe(401);
   });
 
   // Add more tests as needed
