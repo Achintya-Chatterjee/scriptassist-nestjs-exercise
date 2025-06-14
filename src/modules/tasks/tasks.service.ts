@@ -13,6 +13,7 @@ import { BatchProcessTasksCommand } from './commands/batch-process-tasks.command
 import { GetAllTasksQuery } from './queries/get-all-tasks.query';
 import { GetTaskByIdQuery } from './queries/get-task-by-id.query';
 import { GetTaskStatsQuery } from './queries/get-task-stats.query';
+import { TaskStatsDto } from './dto/task-stats.dto';
 
 @Injectable()
 export class TasksService {
@@ -74,7 +75,7 @@ export class TasksService {
    * Retrieves statistics about tasks.
    * @returns An object with task counts by status and priority.
    */
-  getStats(): Promise<{ byStatus: any; byPriority: any; total: number }> {
+  getStats(): Promise<TaskStatsDto> {
     return this.queryBus.execute(new GetTaskStatsQuery());
   }
 

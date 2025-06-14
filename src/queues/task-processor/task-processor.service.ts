@@ -3,7 +3,28 @@ import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import { CommandBus } from '@nestjs/cqrs';
 import { UpdateTaskCommand } from 'src/modules/tasks/commands/update-task.command';
+import { TaskStatus } from 'src/modules/tasks/enums/task-status.enum';
 import { UpdateTaskDto } from 'src/modules/tasks/dto/update-task.dto';
+
+// #region Job Data Interfaces
+interface TaskStatusUpdateData {
+  taskId: string;
+  status: TaskStatus;
+}
+
+interface OverdueTaskData {
+  taskId: string;
+}
+// #endregion
+
+// #region Job Result Type
+type JobResult = {
+  success: boolean;
+  message?: string;
+  error?: string;
+  [key: string]: unknown;
+};
+// #endregion
 
 @Injectable()
 @Processor('task-processing', {
@@ -20,26 +41,20 @@ export class TaskProcessorService extends WorkerHost {
     super();
   }
 
-  // Inefficient implementation:
-  // - No proper job batching
-  // - No error handling strategy
-  // - No retries for failed jobs
-  // - No concurrency control
-  async process(job: Job): Promise<any> {
+  async process(job: Job): Promise<JobResult> {
     this.logger.debug(`Processing job ${job.id} of type ${job.name}`);
 
     try {
       switch (job.name) {
         case 'task-status-update':
-          return await this.handleStatusUpdate(job);
+          return await this.handleStatusUpdate(job as Job<TaskStatusUpdateData>);
         case 'overdue-tasks-notification':
-          return await this.handleOverdueTasks(job);
+          return await this.handleOverdueTasks(job as Job<OverdueTaskData>);
         default:
           this.logger.warn(`Unknown job type: ${job.name}`);
           return { success: false, error: 'Unknown job type' };
       }
     } catch (error) {
-      // Basic error logging without proper handling or retries
       this.logger.error(
         `Error processing job ${job.id}: ${error instanceof Error ? error.message : 'Unknown error'}`,
       );
@@ -48,7 +63,7 @@ export class TaskProcessorService extends WorkerHost {
     }
   }
 
-  private async handleStatusUpdate(job: Job) {
+  private async handleStatusUpdate(job: Job<TaskStatusUpdateData>): Promise<JobResult> {
     const { taskId, status } = job.data;
 
     if (!taskId || !status) {
@@ -56,12 +71,8 @@ export class TaskProcessorService extends WorkerHost {
       return { success: false, error: 'Missing required data' };
     }
 
-    // Inefficient: No validation of status values
-    // No transaction handling
-    // No retry mechanism
-    const task = await this.commandBus.execute(
-      new UpdateTaskCommand(taskId, { status } as UpdateTaskDto),
-    );
+    const updateDto: UpdateTaskDto = { status };
+    const task = await this.commandBus.execute(new UpdateTaskCommand(taskId, updateDto));
 
     return {
       success: true,
@@ -70,7 +81,7 @@ export class TaskProcessorService extends WorkerHost {
     };
   }
 
-  private async handleOverdueTasks(job: Job) {
+  private async handleOverdueTasks(job: Job<OverdueTaskData>): Promise<JobResult> {
     const { taskId } = job.data;
     if (!taskId) {
       this.logger.warn(
@@ -81,7 +92,6 @@ export class TaskProcessorService extends WorkerHost {
 
     this.logger.warn(`Task with ID ${taskId} is overdue. Sending notification...`);
     // In a production application, this would trigger an email, push notification, etc.
-    // For this exercise, logging is sufficient.
     return { success: true, message: `Notification sent for overdue task ${taskId}` };
   }
 }

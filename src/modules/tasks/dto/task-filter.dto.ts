@@ -4,8 +4,6 @@ import { Transform } from 'class-transformer';
 import { TaskStatus } from '../enums/task-status.enum';
 import { TaskPriority } from '../enums/task-priority.enum';
 
-// TODO: Implement task filtering DTO
-// This DTO should be used to filter tasks by status, priority, etc.
 export class TaskFilterDto {
   @ApiPropertyOptional({ enum: TaskStatus, description: 'Filter by task status' })
   @IsOptional()
